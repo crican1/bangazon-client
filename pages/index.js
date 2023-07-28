@@ -1,26 +1,50 @@
-import { Button } from 'react-bootstrap';
-import { signOut } from '../utils/auth';
-import { useAuth } from '../utils/context/authContext';
+import React, { useEffect, useState } from 'react';
+import { Form, InputGroup } from 'react-bootstrap';
+import { getProducts } from '../utils/data/productData';
+import ProductCard from '../components/product/ProductCard';
 
 function Home() {
-  const { user } = useAuth();
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
+  console.warn(search);
+
+  const showProducts = () => {
+    getProducts().then((data) => {
+      setProducts(data);
+    })
+      .catch((error) => {
+        console.error('No products:', error);
+      });
+  };
+  useEffect(() => {
+    showProducts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div
-      className="text-center d-flex flex-column justify-content-center align-content-center"
-      style={{
-        height: '90vh',
-        padding: '30px',
-        maxWidth: '400px',
-        margin: '0 auto',
-      }}
-    >
-      <h1>Hello {user.fbUser.displayName}! </h1>
-      <p>Your Bio: {user.bio}</p>
-      <p>Click the button below to logout!</p>
-      <Button variant="danger" type="button" size="lg" className="copy-btn" onClick={signOut}>
-        Sign Out
-      </Button>
-    </div>
+    <>
+      <article className="posts">
+        <h1>Products</h1>
+        <Form>
+          <InputGroup className="my-3">
+            <Form.Control onChange={(e) => setSearch(e.target.value)} placeholder="Search Products" />
+          </InputGroup>
+        </Form>
+        {products.filter((product) => (search.toLowerCase() === '' ? product : product.title.toLowerCase().includes(search))).map((product) => (
+          <section key={`product--${product.id}`} className="product">
+            <ProductCard
+              id={product.id}
+              title={product.title}
+              productImage={product.product_image}
+              description={product.description}
+              price={product.price}
+              unitsAvailable={product.units_available}
+              onUpdate={showProducts}
+            />
+          </section>
+        ))}
+      </article>
+    </>
   );
 }
 
